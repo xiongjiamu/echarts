@@ -380,25 +380,31 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-                var chart = echarts.init(document.getElementById('main5'));
                 var option = {
                     backgroundColor: '#eee',
-                    title: {
-                        text: 'Should show tooltip for axis label'
-                    },
                     tooltip: {},
                     xAxis: {
                         type: 'category',
-                        data: ['Monday', 'Tuesday', 'Wednesday', 'Thurstay', 'Friday', 'Saturday', 'Sunday'],
+                        data: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                         axisLabel: {
-                            width: 20,
-                            overflow: 'truncate'
+                            width: 60,
+                            overflow: 'truncate',
+                            interval: 0
                         },
                         // triggerEvent: true,
                         tooltip: {
                             show: true,
                             position: 'top',
-                            trigger: 'item'
+                            trigger: 'item',
+                            formatter(p) {
+                                const labelEl = p.getTickLabel().childrenRef()[0];
+                                if (labelEl.style.text !== p.name) {
+                                    return p.name;
+                                }
+                                if (p.tickIndex > 3) {
+                                    return `Oh, it is happy ${p.name}! 😀`;
+                                }
+                            }
                         }
                     },
                     yAxis: {
@@ -421,7 +427,10 @@ under the License.
                         }
                     ]
                 };
-                chart.setOption(option);
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: 'Should show tooltip for axis label',
+                    option: option
+                });
             });
 
         </script>

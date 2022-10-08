@@ -813,7 +813,11 @@ function buildAxisLabel(
         graphic.setTooltipConfig({
             el: textEl,
             componentModel: axisModel,
-            itemName: formattedLabel
+            itemName: formattedLabel,
+            formatterParamsExtra: {
+                getTickLabel: () => textEl,
+                tickIndex: index
+            }
         });
 
         // Pack data for mouse event
