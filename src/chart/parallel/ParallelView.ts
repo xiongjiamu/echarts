@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import SeriesData from '../../data/SeriesData';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
@@ -29,7 +29,7 @@ import Parallel from '../../coord/parallel/Parallel';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 
 const DEFAULT_SMOOTH = 0.3;
@@ -218,7 +218,9 @@ function updateElCommon(
     const emphasisModel = itemModel.getModel('emphasis');
     setStatesStylesFromModel(el, itemModel, 'lineStyle');
 
-    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+    toggleHoverEmphasis(
+        el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
+    );
 }
 
 // function simpleDiff(oldData, newData, dimensions) {

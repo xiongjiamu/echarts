@@ -17,10 +17,30 @@
 * under the License.
 */
 
-import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../core/ExtensionAPI';
-import BoxplotSeriesModel from './BoxplotSeries';
+import { error } from '../util/log';
 
-export default function boxplotVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
+// Implementation of exported APIs. For example registerMap, getMap.
+// The implentations will be registered when installing the component.
+// Avoid these code being bundled to the core module.
+
+const implsStore: Record<string, any> = {};
+
+// TODO Type
+export function registerImpl(name: string, impl: any) {
+    if (__DEV__) {
+        if (implsStore[name]) {
+            error(`Already has an implementation of ${name}.`);
+        }
+    }
+    implsStore[name] = impl;
+}
+
+export function getImpl(name: string) {
+    if (__DEV__) {
+        if (!implsStore[name]) {
+            error(`Implementation of ${name} doesn't exists.`);
+        }
+    }
+    return implsStore[name];
 }

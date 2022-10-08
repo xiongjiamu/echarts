@@ -110,10 +110,10 @@ class Graph {
         const edgesMap = this._edgesMap;
 
         // PNEDING
-        if (typeof n1 === 'number') {
+        if (zrUtil.isNumber(n1)) {
             n1 = this.nodes[n1];
         }
-        if (typeof n2 === 'number') {
+        if (zrUtil.isNumber(n2)) {
             n2 = this.nodes[n2];
         }
 
@@ -360,8 +360,8 @@ class GraphNode {
     }
 
     // TODO: TYPE Same type with Model#getModel
-    getModel<T = unknown>(): Model<T>
-    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(): Model<T>;
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>;
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
@@ -410,8 +410,8 @@ class GraphEdge {
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
     }
 
-    getModel<T = unknown>(): Model<T>
-    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(): Model<T>;
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {

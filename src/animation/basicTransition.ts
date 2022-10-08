@@ -26,9 +26,10 @@ import {
     AnimationOption
 } from '../util/types';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import Element, { ElementAnimateConfig } from 'zrender/src/Element';
+import Element, { ElementAnimateConfig, ElementProps } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
+    isFunction,
     isObject,
     retrieve2
 } from 'zrender/src/core/util';
@@ -101,13 +102,13 @@ export function getAnimationConfig(
             animationPayload.easing != null && (easing = animationPayload.easing);
             animationPayload.delay != null && (delay = animationPayload.delay);
         }
-        if (typeof delay === 'function') {
+        if (isFunction(delay)) {
             delay = delay(
                 dataIndex as number,
                 extraDelayParams
             );
         }
-        if (typeof duration === 'function') {
+        if (isFunction(duration)) {
             duration = duration(dataIndex as number);
         }
         const config = {
@@ -136,7 +137,7 @@ function animateOrSetProps<Props>(
 ) {
     let isFrom = false;
     let removeOpt: AnimationOption;
-    if (typeof dataIndex === 'function') {
+    if (isFunction(dataIndex)) {
         during = cb;
         cb = dataIndex;
         dataIndex = null;
@@ -215,7 +216,7 @@ function animateOrSetProps<Props>(
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
- function updateProps<Props>(
+ function updateProps<Props extends ElementProps>(
     el: Element<Props>,
     props: Props,
     // TODO: TYPE AnimatableModel
@@ -237,7 +238,7 @@ export {updateProps};
  * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
  */
-export function initProps<Props>(
+export function initProps<Props extends ElementProps>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,

@@ -40,8 +40,8 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-
-
+        <div id="main3"></div>
+        <div id="main4"></div>
 
 
         <script>
@@ -218,8 +218,162 @@ under the License.
                 });
 
             });
-            </script>
+        </script>
 
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    graphic:{
+                        elements: [{
+                            type: 'group',
+                            left: '10%',
+                            top: 'center',
+                            draggable: true,
+                            children: [{
+                                type: 'rect',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                shape: {
+                                    width: 240,
+                                    height: 90
+                                },
+                                style: {
+                                    fill: 'gray',
+                                    stroke: '#555',
+                                    lineWidth: 1,
+                                    shadowBlur: 8,
+                                    shadowOffsetX: 3,
+                                    shadowOffsetY: 3,
+                                    shadowColor: 'rgba(0,0,0,0.2)'
+                                },
+                                cursor: 'move',
+                            }, {
+                                type: 'text',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                style: {
+                                    fill: '#000',
+                                    width: 220,
+                                    overflow: 'break',
+                                    text: 'the value of cursor prop is "default", it looks well on version 5.1.1. Replace echarts version with 5.3.0, the mouse will still be a pointer',
+                                    font: '14px Microsoft YaHei'
+                                },
+                                cursor: 'help',
+                            }]
+                        }]
+                    }
+                };
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Cursor should be **move** when hovering on the rect',
+                        'Cursor should be **help** when hovering on the text',
+                        'See https://github.com/apache/echarts/issues/16511'
+                    ],
+                    option: option
+                });
+                var logBox = document.createElement('p');
+                logBox.style.cssText = 'position:absolute;bottom:5px;left:5px';
+                chart.getDom().appendChild(logBox);
+                var observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutationRecord) {
+                        const cursor = mutationRecord.target.style.cursor;
+                        console.log('cursor', cursor);
+                        logBox.innerText = 'cursor: ' + cursor;
+                    });
+                });
+                observer.observe(chart.getDom().firstChild, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+             });
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    graphic:{
+                        elements: [{
+                            type: 'group',
+                            x: 200,
+                            y: 200,
+                            draggable: true,
+                            children: [{
+                                type: 'rect',
+                                left: 'center',
+                                top: 'middle',
+                                shape: {
+                                    width: 240,
+                                    height: 90
+                                },
+                                style: {
+                                    fill: 'gray'
+                                },
+                                cursor: 'move',
+                                z: 100,
+                                onclick: function (e) {
+                                    console.log(e.type);
+                                }
+                            }]
+                        }]
+                    }
+                };
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        '1. Click the **Update(empty)** button, the graphic element should be **still draggable** and output log when it is clicked',
+                        '2. Click the **Update** button, the graphic element should **NOT** be **draggable** and no response when it is clicked',
+                        '3. See also the example on https://echarts.apache.org/examples/editor.html?c=line-draggable',
+                    ],
+                    buttons: [{
+                        text: 'Update(empty)',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    // no option
+                                }
+                            });
+                        }
+                    }, {
+                        text: 'Update',
+                        onclick() {
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        // draggable: undefined,
+                                        // draggable: null,
+                                        draggable: false,
+                                        children: [{
+                                            cursor: undefined,
+                                            onclick: 'asdfghj',
+                                            // onclick: null
+                                            style: {
+                                                fill: 'red'
+                                            },
+                                        }]
+                                    }]
+                                }
+                            });
+                        }
+                    }],
+                    option: option
+                });
+                var logBox = document.createElement('p');
+                logBox.style.cssText = 'position:absolute;bottom:5px;left:5px';
+                chart.getDom().appendChild(logBox);
+                var observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutationRecord) {
+                        const cursor = mutationRecord.target.style.cursor;
+                        console.log('cursor', cursor);
+                        logBox.innerText = 'cursor: ' + cursor;
+                    });
+                });
+                observer.observe(chart.getDom().firstChild, {
+                    attributes: true,
+                    attributeFilter: ['style']
+                });
+            });
+        </script>
     </body>
 </html>
 

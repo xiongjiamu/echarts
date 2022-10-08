@@ -61,7 +61,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
-
+import type ComponentView from '../view/Component';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -74,6 +74,10 @@ const getSavedStates = makeInner<{
     selectFill?: ZRColor
     selectStroke?: ZRColor
 }, Path>();
+
+const getComponentStates = makeInner<{
+    isBlured: boolean
+}, SeriesModel | ComponentModel>();
 
 export const HOVER_STATE_NORMAL: 0 = 0;
 export const HOVER_STATE_BLUR: 1 = 1;
@@ -361,7 +365,8 @@ function elementStateProxy(this: Displayable, stateName: string, targetStates?: 
     }
     return state;
 }
-/**FI
+
+/**
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
  * @param focus 'self' | 'selfInSeries' | 'series'
@@ -424,14 +429,27 @@ function shouldSilent(el: Element, e: ElementEvent) {
 
 export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
+    const leaveBlurredSeries: SeriesModel[] = [];
+    const allComponentViews: ComponentView[] = [];
     model.eachComponent(function (componentType, componentModel) {
-        const view = componentType === 'series'
-            ? api.getViewOfSeriesModel(componentModel as SeriesModel)
+        const componentStates = getComponentStates(componentModel);
+        const isSeries = componentType === 'series';
+        const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
             : api.getViewOfComponentModel(componentModel);
-        // Leave blur anyway
-        view.group.traverse(function (child) {
-            singleLeaveBlur(child);
-        });
+        !isSeries && allComponentViews.push(view as ComponentView);
+        if (componentStates.isBlured) {
+            // Leave blur anyway
+            view.group.traverse(function (child) {
+                singleLeaveBlur(child);
+            });
+            isSeries && leaveBlurredSeries.push(componentModel as SeriesModel);
+        }
+        componentStates.isBlured = false;
+    });
+    each(allComponentViews, function (view) {
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(leaveBlurredSeries, false, model);
+        }
     });
 }
 
@@ -502,6 +520,8 @@ export function blurSeries(
             }
 
             blurredSeries.push(seriesModel);
+
+            getComponentStates(seriesModel).isBlured = true;
         }
     });
 
@@ -510,8 +530,8 @@ export function blurSeries(
             return;
         }
         const view = api.getViewOfComponentModel(componentModel);
-        if (view && view.blurSeries) {
-            view.blurSeries(blurredSeries, ecModel);
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(blurredSeries, true, ecModel);
         }
     });
 }
@@ -530,6 +550,8 @@ export function blurComponent(
         return;
     }
 
+    getComponentStates(componentModel).isBlured = true;
+
     const view = api.getViewOfComponentModel(componentModel);
     if (!view || !view.focusBlurEnabled) {
         return;
@@ -547,6 +569,12 @@ export function blurSeriesFromHighlightPayload(
 ) {
     const seriesIndex = seriesModel.seriesIndex;
     const data = seriesModel.getData(payload.dataType);
+    if (!data) {
+        if (__DEV__) {
+            error(`Unknown dataType ${payload.dataType}`);
+        }
+        return;
+    }
     let dataIndex = queryDataIndex(data, payload);
     // Pick the first one if there is multiple/none exists.
     dataIndex = (isArray(dataIndex) ? dataIndex[0] : dataIndex) || 0;
@@ -663,7 +691,7 @@ export function handleGlobalMouseOverForHighDown(
     }
 }
 
-export function handleGlboalMouseOutForHighDown(
+export function handleGlobalMouseOutForHighDown(
     dispatcher: Element,
     e: ElementEvent,
     api: ExtensionAPI
@@ -758,6 +786,15 @@ export function enableHoverEmphasis(el: Element, focus?: InnerFocus, blurScope?:
     enableHoverFocus(el, focus, blurScope);
 }
 
+export function disableHoverEmphasis(el: Element) {
+    setAsHighDownDispatcher(el, false);
+}
+
+export function toggleHoverEmphasis(el: Element, focus: InnerFocus, blurScope: BlurScope, isDisabled: boolean) {
+    isDisabled ? disableHoverEmphasis(el)
+        : enableHoverEmphasis(el, focus, blurScope);
+}
+
 export function enableHoverFocus(el: Element, focus: InnerFocus, blurScope: BlurScope) {
     const ecData = getECData(el);
     if (focus != null) {
@@ -804,7 +841,12 @@ export function setStatesStylesFromModel(
 
 
 /**
- * @parame el
+ *
+ * Set element as highlight / downplay dispatcher.
+ * It will be checked when element recieved mouseover event or from highlight action.
+ * It's in change of all highlight/downplay behavior of it's children.
+ *
+ * @param el
  * @param el.highDownSilentOnTouch
  *        In touch device, mouseover event will be trigger on touchstart event
  *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can

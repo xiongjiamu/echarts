@@ -354,13 +354,19 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         // which is convinient for user preparing option.
         const rawData = this.get('data') || potentialData;
 
+        const legendNameMap = zrUtil.createHashMap();
         const legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number
-            if (typeof dataItem === 'string' || typeof dataItem === 'number') {
+            if (zrUtil.isString(dataItem) || zrUtil.isNumber(dataItem)) {
                 dataItem = {
-                    name: dataItem
+                    name: dataItem as string
                 };
             }
+            if (legendNameMap.get(dataItem.name)) {
+                // remove legend name duplicate
+                return null;
+            }
+            legendNameMap.set(dataItem.name, true);
             return new Model(dataItem, this, this.ecModel);
         }, this);
 
@@ -368,7 +374,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
          * @type {Array.<module:echarts/model/Model>}
          * @private
          */
-        this._data = legendData;
+        this._data = zrUtil.filter(legendData, item => !!item);
     }
 
     getData() {

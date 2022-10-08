@@ -36,7 +36,8 @@ import {
     DecalObject,
     SeriesLabelOption,
     DefaultEmphasisFocus,
-    AriaOptionMixin
+    AriaOptionMixin,
+    BlurScope
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -54,7 +55,6 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
 }
 
 interface TreemapSeriesLabelOption extends SeriesLabelOption {
-    ellipsis?: boolean
     formatter?: string | ((params: CallbackDataParams) => string)
 }
 
@@ -193,7 +193,7 @@ export interface TreemapSeriesOption
      * be on left depth, the behaviour would be changing root. Otherwise
      * use behavious defined above.
      */
-    nodeClick?: 'zoomToNode' | 'link'
+    nodeClick?: 'zoomToNode' | 'link' | false
 
     breadcrumb?: BoxLayoutOptionMixin & {
         show?: boolean
@@ -203,6 +203,9 @@ export interface TreemapSeriesOption
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
+            disabled?: boolean
+            focus?: DefaultEmphasisFocus
+            blurScope?: BlurScope
             itemStyle?: BreadcrumbItemStyleOption
         }
     }
@@ -262,9 +265,14 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             // bottom
             emptyItemWidth: 25,             // Width of empty node.
             itemStyle: {
-                color: 'rgba(0,0,0,0.7)', //'#5793f3',
+                color: 'rgba(0,0,0,0.7)', // '#5793f3',
                 textStyle: {
                     color: '#fff'
+                }
+            },
+            emphasis: {
+                itemStyle: {
+                    color: 'rgba(0,0,0,0.9)' // '#5793f3',
                 }
             }
         },
@@ -305,7 +313,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             upperLabel: {
                 show: true,
                 position: [0, '50%'],
-                ellipsis: true,
+                overflow: 'truncate',
                 verticalAlign: 'middle'
             }
         },
@@ -337,12 +345,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         levels: []                  // Each item: {
                                     //     visibleMin, itemStyle, visualDimension, label
                                     // }
-        // data: {
-        //      value: [],
-        //      children: [],
-        //      link: 'http://xxx.xxx.xxx',
-        //      target: 'blank' or 'self'
-        // }
     };
 
     /**

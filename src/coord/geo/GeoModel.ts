@@ -38,7 +38,7 @@ import {
     CommonTooltipOption,
     StatesMixinBase
 } from '../../util/types';
-import { NameMap } from './geoTypes';
+import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
 
@@ -72,6 +72,7 @@ export interface GeoTooltipFormatterParams {
     $vars: ['name']
 }
 
+
 export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Map name
     map: string;
@@ -80,7 +81,7 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // This parameter is used for scale this aspect
     aspectScale?: number;
 
-    ///// Layout with center and size
+    // Layout with center and size
     // If you wan't to put map in a fixed size box with right aspect ratio
     // This two properties may more conveninet
     // Like: `40` or `'50%'`.
@@ -88,13 +89,21 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // Like: `40` or `'50%'`.
     layoutSize?: number | string;
 
-    // Define left-top, right-bottom coords to control view
+    // Define left-top, right-bottom lng/lat coords to control view
     // For example, [ [180, 90], [-180, -90] ]
     // higher priority than center and zoom
     boundingCoords?: number[][];
 
     nameMap?: NameMap;
     nameProperty?: string;
+
+    /**
+     * Use raw projection by default
+     * Only available for GeoJSON source.
+     *
+     * NOTE: `center` needs to be the projected coord if projection is used.
+     */
+    projection?: GeoProjection;
 }
 
 export interface GeoOption extends
@@ -147,7 +156,7 @@ class GeoModel extends ComponentModel<GeoOption> {
         // for geoJSON source: 0.75.
         aspectScale: null,
 
-        ///// Layout with center and size
+        // /// Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
         // This two properties may more conveninet
         // layoutCenter: [50%, 50%]
@@ -270,11 +279,11 @@ class GeoModel extends ComponentModel<GeoOption> {
         const params = {
             name: name
         } as GeoLabelFormatterDataParams;
-        if (typeof formatter === 'function') {
+        if (zrUtil.isFunction(formatter)) {
             params.status = status;
             return formatter(params);
         }
-        else if (typeof formatter === 'string') {
+        else if (zrUtil.isString(formatter)) {
             return formatter.replace('{a}', name != null ? name : '');
         }
     }

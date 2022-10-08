@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject, map} from 'zrender/src/core/util';
+import {retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
@@ -46,6 +46,8 @@ type AxisEventData = {
     targetType: 'axisName' | 'axisLabel'
     name?: string
     value?: string | number
+    dataIndex?: number
+    tickIndex?: number
 } & {
     [key in AxisIndexKey]?: number
 };
@@ -253,6 +255,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const matrix = transformGroup.transform;
         const pt1 = [extent[0], 0];
         const pt2 = [extent[1], 0];
+        const inverse = pt1[0] > pt2[0];
         if (matrix) {
             v2ApplyTransform(pt1, pt1, matrix);
             v2ApplyTransform(pt2, pt2, matrix);
@@ -266,8 +269,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         );
 
         const line = new graphic.Line({
-            // Id for animation
-            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -279,6 +280,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             silent: true,
             z2: 1
         });
+        graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
         line.anid = 'line';
         group.add(line);
 
@@ -287,15 +289,13 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         if (arrows != null) {
             let arrowSize = axisModel.get(['axisLine', 'symbolSize']);
 
-            if (typeof arrows === 'string') {
+            if (isString(arrows)) {
                 // Use the same arrow for start and end point
                 arrows = [arrows, arrows];
             }
-            if (typeof arrowSize === 'string'
-                || typeof arrowSize === 'number'
-            ) {
+            if (isString(arrowSize) || isNumber(arrowSize)) {
                 // Use the same size for width and height
-                arrowSize = [arrowSize, arrowSize];
+                arrowSize = [arrowSize as number, arrowSize as number];
             }
 
             const arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
@@ -327,10 +327,11 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     // Calculate arrow position with offset
                     const r = point.r + point.offset;
 
+                    const pt = inverse ? pt2 : pt1;
                     symbol.attr({
                         rotation: point.rotate,
-                        x: pt1[0] + r * Math.cos(opt.rotation),
-                        y: pt1[1] - r * Math.sin(opt.rotation),
+                        x: pt[0] + r * Math.cos(opt.rotation),
+                        y: pt[1] - r * Math.sin(opt.rotation),
                         silent: true,
                         z2: 11
                     });
@@ -341,7 +342,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
     },
 
     axisTickLabel(opt, axisModel, group, transformGroup) {
-
         const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
         const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
 
@@ -628,7 +628,6 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -640,6 +639,7 @@ function createTicks(
             autoBatch: true,
             silent: true
         });
+        graphic.subPixelOptimizeLine(tickEl.shape, tickEl.style.lineWidth);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
     }
@@ -789,7 +789,7 @@ function buildAxisLabel(
                 verticalAlign: itemLabelModel.getShallow('verticalAlign', true)
                     || itemLabelModel.getShallow('baseline', true)
                     || labelLayout.textVerticalAlign,
-                fill: typeof textColor === 'function'
+                fill: isFunction(textColor)
                     ? textColor(
                         // (1) In category axis with data zoom, tick is not the original
                         // index of axis.data. So tick should not be exposed to user
@@ -821,6 +821,10 @@ function buildAxisLabel(
             const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
+            eventData.tickIndex = index;
+            if (axis.type === 'category') {
+                eventData.dataIndex = tickValue;
+            }
 
             getECData(textEl).eventData = eventData;
         }

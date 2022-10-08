@@ -81,7 +81,7 @@ export interface SunburstSeriesNodeItemOption extends
     StatesOptionMixin<SunburstStateOption<CallbackDataParams>, SunburstStatesMixin>,
     OptionDataItemObject<OptionDataValue>
 {
-    nodeClick?: 'rootToNode' | 'link'
+    nodeClick?: 'rootToNode' | 'link' | false
     // Available when nodeClick is link
     link?: string
     target?: string
@@ -138,7 +138,7 @@ export interface SunburstSeriesOption extends
      */
     // highlightPolicy?: 'descendant' | 'ancestor' | 'self'
 
-    nodeClick?: 'rootToNode' | 'link'
+    nodeClick?: 'rootToNode' | 'link' | false
 
     renderLabelForZeroData?: boolean
 
@@ -171,8 +171,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levelModels = this._levelModels
-            = zrUtil.map(option.levels || [], function (levelDefine) {
+        const levelModels = this._levelModels =
+            zrUtil.map(option.levels || [], function (levelDefine) {
                 return new Model(levelDefine, this, ecModel);
             }, this);
 
