@@ -89,6 +89,8 @@
   "emphasis-disabled": 13,
   "emphasis-inherit": 1,
   "funnel": 2,
+  "funnel-dynamicHeight": 1,
+  "funnel-showRate": 1,
   "gauge-simple": 2,
   "geo-map": 4,
   "geo-map-features": 3,
