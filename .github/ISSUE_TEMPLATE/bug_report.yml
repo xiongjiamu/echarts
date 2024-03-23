@@ -1,12 +1,12 @@
-name: Bug Report
-description: Report a bug to Apache ECharts
-title: "[Bug] "
-labels: [bug]
+name: 安全漏洞报告
+description: 向我们报告代码安全漏洞和隐私泄漏等敏感信息，促进项目的安全性和可靠性
+title: "[安全漏洞报告]"
+labels: [security]
 body:
 - type: markdown
   attribute:
     value: |
-      The issue list is reserved exclusively for bug reports and feature requests.
+      当你提交了安全漏洞报告后，你可以与项目成员在这里单独讨论、修复安全漏洞。当安全漏洞修复后，你可以
 
       For usage questions, please use the following resources:
 
