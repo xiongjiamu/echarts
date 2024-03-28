@@ -60,7 +60,7 @@ body:
       即使没有可用的补丁，项目成员仍然可以通过执行一些临时措施来减轻安全漏洞的风险。这些临时措施通常称为“解决方法”或“临时修复”。这些方法可能包括配置系统设置、禁用受影响的功能或模块，或者实施其他安全控制来限制漏洞的利用。
 
   validations:
-    required: false
+    required: true
 
 - type: textarea
   attributes:
@@ -99,7 +99,6 @@ body:
       - 中等（Moderate）
       - 高（High）
       - 严重（Critical）
-    default: 0
   validations:
     required: true
 
